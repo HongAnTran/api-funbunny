@@ -47,9 +47,12 @@ class UsertList(APIView):
 
     def post(self, request, format=None):
         data = request.data
-        user = User.objects.create_user(data.username,data.email, data.password)
+        print(data)
+        user = User.objects.create_user(data['username'],data['email'], data['password'])
         user.save()
+        print(user)
         serializer = UserSerializer(data=user)
+        print(serializer.is_valid())
         if serializer.is_valid():
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

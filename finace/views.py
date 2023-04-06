@@ -15,10 +15,10 @@ from django.contrib.auth.models import User
 @api_view(['GET'])
 def index(request):
     routes = [
-        '/api/token',
-        '/api/token/refresh',
-        'transaction',
-        'user'
+        'token/',
+        'token/refresh/',
+        'transaction/',
+        'user/'
     ]
 
     return Response(routes)
@@ -47,15 +47,13 @@ class UsertList(APIView):
 
     def post(self, request, format=None):
         data = request.data
-        print(data)
+        if User.objects.filter(username = data['username']).first():
+            return Response( "This username is already taken", status=status.HTTP_400_BAD_REQUEST)
+       
+       
         user = User.objects.create_user(data['username'],data['email'], data['password'])
         user.save()
-        print(user)
-        serializer = UserSerializer(data=user)
-        print(serializer.is_valid())
-        if serializer.is_valid():
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response("register success", status=status.HTTP_201_CREATED)
 
 
 class UserDetail(APIView):

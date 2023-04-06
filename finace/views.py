@@ -1,33 +1,28 @@
 from urllib.request import Request
 from django.shortcuts import render
 from django.http import HttpResponse ,JsonResponse
-from .models import User , Transaction
+from .models import  Transaction
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from.serializers import UserSerializer , TransactionSerializer
+from.serializers import  TransactionSerializer , UserSerializer
 from django.core.paginator import Paginator
 from datetime import datetime
-# Create your views here.
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework.decorators import api_view, permission_classes
+from django.contrib.auth.models import User
+
+
+@api_view(['GET'])
 def index(request):
-    return HttpResponse("Hello api funbunny")
+    routes = [
+        '/api/token',
+        '/api/token/refresh',
+        'transaction',
+        'user'
+    ]
 
+    return Response(routes)
 
-class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
-    @classmethod
-    def get_token(cls, user):
-        token = super().get_token(user)
-
-        # Add custom claims
-        print(user)
-        token['username'] = user.username
-        # ...
-
-        return token
-class MyTokenObtainPairView(TokenObtainPairView):
-    serializer_class = MyTokenObtainPairSerializer
 
 
 class UsertList(APIView):
@@ -39,7 +34,7 @@ class UsertList(APIView):
         page_default = 1
         page_number = request.query_params.get('page_number' , page_default) 
         queryset = User.objects.all()
-
+        
         if limit:
             paginator = Paginator(queryset, limit)
             page = paginator.page(page_number)
@@ -51,9 +46,11 @@ class UsertList(APIView):
         return Response(serializer.data)
 
     def post(self, request, format=None):
-        serializer = UserSerializer(data=request.data)
+        data = request.data
+        user = User.objects.create_user(data.username,data.email, data.password)
+        user.save()
+        serializer = UserSerializer(data=user)
         if serializer.is_valid():
-            serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -96,6 +93,10 @@ class TransactionList(APIView):
         + limit? : number = truyền vào nếu cần phân trang hoặc limit 
         + page_number? : number =  trang cần lấy mặc đinh là 1
     """
+    # def get(self, request : Request, ):
+        # Transaction.objects.delete()
+        # records = Transaction.objects.all()
+        # records.delete()
     def get(self, request : Request, format=None):
         # uid = request.query_params.get('uid')
         date_from = request.query_params.get('date_from')
